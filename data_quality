@@ -1,0 +1,64 @@
+Data Cleaning and Processing System for Enhanced Data Quality
+
+
+import pandas as pd
+import numpy as np
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
+import matplotlib.pyplot as plt
+
+class DataProcessor:
+    def __init__(self):
+        self.df = None
+    
+    def load_data(self, file_path, file_format='csv'):
+        """Load data from file."""
+        if file_format == 'csv':
+            self.df = pd.read_csv(file_path)
+        # Add support for other file formats
+    
+    def outlier_detection(self, contamination=0.05):
+        """Detect outliers using Isolation Forest."""
+        if self.df is not None:
+            clf = IsolationForest(contamination=contamination, random_state=42)
+            self.df['outlier'] = clf.fit_predict(self.df.dropna())
+    
+    def missing_value_imputation(self, strategy='mean'):
+        """Impute missing values."""
+        if self.df is not None:
+            imputer = SimpleImputer(strategy=strategy)
+            self.df = pd.DataFrame(imputer.fit_transform(self.df), columns=self.df.columns)
+    
+    def normalization(self):
+        """Normalize numerical features."""
+        if self.df is not None:
+            scaler = StandardScaler()
+            numerical_columns = self.df.select_dtypes(include=[np.number]).columns
+            self.df[numerical_columns] = scaler.fit_transform(self.df[numerical_columns])
+    
+    def visualize_data(self, columns=None):
+        """Visualize data for quality control."""
+        if self.df is not None:
+            if columns:
+                self.df[columns].plot(kind='hist', subplots=True, layout=(len(columns), 1), figsize=(10, len(columns)*3))
+                plt.show()
+            else:
+                self.df.plot(kind='hist', subplots=True, layout=(len(self.df.columns), 1), figsize=(10, len(self.df.columns)*3))
+                plt.show()
+    
+    def export_data(self, file_path, file_format='csv'):
+        """Export cleaned data."""
+        if self.df is not None:
+            if file_format == 'csv':
+                self.df.to_csv(file_path, index=False)
+            # Add support for other file formats
+    
+    def process_data(self, file_path, file_format='csv', contamination=0.05, strategy='mean', visualize=False):
+        """Main data processing pipeline."""
+        self.load_data(file_path, file_format)
+        self.outlier_detection(contamination)
+        self.missing_value_imputation(strategy)
+        self.normalization()
+        if visualize:
+            self.visualize_data()
